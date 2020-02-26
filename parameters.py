@@ -1,0 +1,11 @@
+## COLORS
+GREEN = (0, 255, 153)
+BLUE = (0, 255, 255)
+PINK = (255, 120, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+YELLOW = (255, 255, 102)
+
+## WINDOW
+win_w = 800
+win_h = 600
