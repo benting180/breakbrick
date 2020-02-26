@@ -34,7 +34,7 @@ class Brick():
         return
 
 class Seed():
-    def __init__(self, x, y, r, vx=1, vy=-1):
+    def __init__(self, x, y, r=10, vx=1, vy=-1):
         self.x = x
         self.y = y
         self.r = r
@@ -94,6 +94,9 @@ class Stand():
 
 class Game():
     def __init__(self):
+        ## SCORE
+        self.score = 0
+    
         ## WINDOW
         self.win_w = 800
         self.win_h = 600
@@ -132,15 +135,16 @@ class Game():
         self.window_surface = pygame.display.set_mode((self.wall.x_max, self.wall.y_max))
         pygame.display.set_caption('Brick Breaker @@"',)
         self.head_font = pygame.font.SysFont(None, 30)
-        text_surface = self.head_font.render('Hello World!', True, self.WHITE)
+        text_surface = self.head_font.render('Hello World!', True, (255,255,255))
         self.window_surface.blit(text_surface, (10, 10))
         pygame.display.update()
         return
-    
+
+    def score_brick(self):
+        self.score += 10
+
     def draw(self):
         self.window_surface.fill((0, 0, 0))
-        text_surface = self.head_font.render('Hello World!', True, self.WHITE)
-        self.window_surface.blit(text_surface, (10, 10))
 
         for b in self.bricks:
             pygame.draw.rect(self.window_surface, self.GREEN, (b.x, b.y, b.w, b.h), 1)
@@ -150,6 +154,8 @@ class Game():
 
         for s in self.stands:
             pygame.draw.rect(self.window_surface, self.BLUE, (s.x, s.y, s.w, s.h), 1)
+
+        self.update_scoring()
         
     def update(self, dt):
         for s in self.seeds:
@@ -186,6 +192,8 @@ class Game():
                 r = math.sqrt((b.cx - s.x)**2 + (b.cy - s.y)**2)
                 rs.append(r)
         
+            if len(rs) == 0:
+                return
             i = rs.index(min(rs))
             b = self.bricks[i]
 
@@ -234,6 +242,7 @@ class Game():
             
             if hit:
                 self.bricks.pop(i)
+                self.score_brick()
         return
     def collide_stand(self):
         for st in self.stands:
@@ -245,6 +254,9 @@ class Game():
 
     def check_endgame(self):
         if len(self.seeds) == 0:
+            sys.exit()
+
+        if len(self.bricks) == 0:
             sys.exit()
                     
     def check_collision(self):
@@ -262,22 +274,120 @@ class Game():
         for st in self.stands:
             st.move_right(dt)
         return
+    
+    def add_seed(self):
+        st = self.stands[0]
+        seed1 = Seed(st.x1, st.y-10, 10, -0.5, -1)
+        seed2 = Seed(st.x2, st.y-10, 10, +0.5, -1)
+        self.seeds.append(seed1)
+        self.seeds.append(seed2)
+        return
+    
+    def update_scoring(self):
+        text = "score:" + str(self.score)
+        text_surface = self.head_font.render(text, True, self.WHITE)
+        self.window_surface.blit(text_surface, (10, 10))
+        pygame.display.update()
 
+
+
+class Menu():
+    def __init__(self):
+        self.menu_text = ['Play', 'How to Play', 'Setting', 'Ranking', 'Exit']
+        self.menu_match = ['gaming', 'tutorial', 'setting', 'ranking', 'exiting']
+        self.i = 0
+        self.head_font = pygame.font.SysFont(None, 80)
+        self.ys = range(150, 400, 60)
+        self.xs = [300] * len(self.menu_text)
+        return
+    
+    def select_up(self):
+        self.i -= 1
+        if self.i < 0:
+            self.i = 0
+    
+    def select_down(self):
+        self.i += 1
+        if self.i >= len(self.menu_text):
+            self.i = len(self.menu_text)-1
+    
+    def update(self, window_surface):
+        window_surface.fill((0, 0, 0))
         
-game = Game()
-while True:
-    keys = pygame.key.get_pressed()  #checking pressed keys
-    if keys[pygame.K_LEFT]:
-        game.stand_left(dt)
-    if keys[pygame.K_RIGHT]:
-        game.stand_right(dt)
-                
-    t1 = time.time()
-    game.draw()
-    pygame.display.update()
-    dt = time.time() - t1
-    game.update(dt)
-    game.check_collision()
-    game.check_endgame()
+        for j, t in enumerate(self.menu_text):
+            text_surface = self.head_font.render(t, True, (255,255,255))
+            window_surface.blit(text_surface, (300,  150 + j * 60))
+            
+        # pygame.draw.circle(window_surface, WHITE, (xs[i], ys[i]), 10, 0)
+        pygame.draw.rect(window_surface, (255,255,255), (self.xs[self.i], self.ys[self.i], 400, 60), 1)
+        pygame.display.update()
+    
+    def get_selected(self):
+        return self.menu_match[self.i]
 
-    pygame.event.pump() # process event queue
+game = Game()
+menu = Menu()
+mode = 'menu'
+while True:
+    print(mode)
+    if mode == 'menu':
+        ## keyboard
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_UP:
+                    menu.select_up()
+                if e.key == pygame.K_DOWN:
+                    menu.select_down()
+                if e.key == pygame.K_SPACE:
+                    if menu.get_selected() == 'gaming':
+                        mode = 'gaming'
+                    if menu.get_selected() == 'tutorial':
+                        mode = 'tutorial'
+                    if menu.get_selected() == 'setting':
+                        pass
+                    if menu.get_selected() == 'ranking':
+                        pass
+                    if menu.get_selected() == 'exiting':
+                        mode = 'Exit'
+        pygame.event.pump() # process event queue
+        menu.update(game.window_surface)
+
+    if mode == 'tutorial':
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    mode = 'menu'
+
+        game.window_surface.fill((0, 0, 0))
+        head_font = pygame.font.SysFont(None, 80)
+        text_surface1 = head_font.render("use <, >, SPACE to control", True, (255,255,255))
+        text_surface2 = head_font.render("press ESC ...", True, (255,255,255))
+        game.window_surface.blit(text_surface1, (60,  60))
+        game.window_surface.blit(text_surface2, (60, 200))
+        pygame.display.update()
+        
+
+
+    if mode == 'gaming':
+        keys = pygame.key.get_pressed()  #checking pressed keys
+        if keys[pygame.K_LEFT]:
+            game.stand_left(dt)
+        if keys[pygame.K_RIGHT]:
+            game.stand_right(dt)
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:
+                    game.add_seed()
+                    
+        t1 = time.time()
+        game.draw()
+        pygame.display.update()
+        dt = time.time() - t1
+        game.update(dt)
+        game.check_collision()
+        game.check_endgame()
+
+        pygame.event.pump() # process event queue
+    
+    if mode == 'Exit':
+        sys.exit()
