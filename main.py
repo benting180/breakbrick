@@ -77,6 +77,9 @@ while True:
         ctr.check_seed_collision()
         ctr.check_reward_collision()
         ctr.create_rewards()
+        ctr.add_score()
+        ctr.remove_bricks()
+        ctr.remove_rewards()
         ctr.check_endgame()
         ctr.reset_empty()
 

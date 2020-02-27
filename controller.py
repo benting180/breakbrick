@@ -18,7 +18,9 @@ class Controller():
         pygame.init()
 
         ## OBJECTS
-        self._hit_brick = []
+        self._hit_brick_i = []
+        self._hit_brick_xy = []
+        self._hit_reward = []
         self.wall       = layout.get_wall()
         self.bricks     = layout.get_bricks()
         self.seeds      = layout.get_seeds()
@@ -38,7 +40,7 @@ class Controller():
         for j, r in enumerate(self.rewards):
             if r.y2 > st.y1:
                 if r.x2 > st.x1 and st.x1 < st.x2:
-                    self.rewards.pop(j)
+                    self._hit_reward.append(j)
                     st.enlong()
 
     def check_seed_collision(self):
@@ -66,6 +68,7 @@ class Controller():
             if b.y - b.r < self.wall.y1:
                 b.rebound_y()
                 b.y = self.wall.y1 + b.r
+
 
     def collide_brick(self):
         for s in self.seeds:
@@ -123,11 +126,10 @@ class Controller():
                         s.rebound_y()
             
             if hit:
-                ## create rewards
-                xyi = self.bricks[i].get_coord() + (i,)
-                self._hit_brick.append(xyi)
-                self.bricks.pop(i)
-                self.score_brick()
+                xy = self.bricks[i].get_coord()
+                self._hit_brick_i.append(i)
+                self._hit_brick_xy.append(xy)
+                
     
     def collide_stand(self):
         for st in self.stands:
@@ -143,8 +145,9 @@ class Controller():
         self.window.blit(_, (10, 10))
         pygame.display.update()
     
-    def score_brick(self):
-        self.score += 10
+    def add_score(self):
+
+        self.score += len(self._hit_brick_i) * 10
 
     ### WINDOW
     def draw_all(self):
@@ -170,22 +173,27 @@ class Controller():
         for r in self.rewards: r.nex(dt) 
 
     def create_rewards(self):
-        for xy in self._hit_brick[::-1]:
-            i = xy[2]
+        for xy in self._hit_brick_xy[::-1]:
             if random.random() > 0.1:
                 reward = MovableCircle(xy[0], xy[1], 7, 0, 1)
                 self.rewards.append(reward)
 
     def remove_bricks(self):
-        for xy in self._hit_brick[::-1]:
-            self.bricks.pop(xy[2])
+        for i in sorted(self._hit_brick_i, reverse=True):
+            self.bricks.pop(i)
+    
+    def remove_rewards(self):
+        for j in self._hit_reward[::-1]:
+            self.rewards.pop(j)
 
     def check_endgame(self):
         if len(self.seeds) == 0 : sys.exit()
         if len(self.bricks) == 0 : sys.exit()
     
     def reset_empty(self):
-        self._hit_brick = []
+        self._hit_brick_i = []
+        self._hit_brick_xy = []
+        self._hit_reward = []
 
     ### CONTROL
     def stand_left(self, dt):
