@@ -5,83 +5,47 @@ import random
 import pygame
 
 import parameters as P
+import text
 
 from shape import Rectangle, MovableRectangle
 from shape import Circle, MovableCircle
 from shape import Stand
 
+import layout
+
 class Controller():
     def __init__(self):
-        ## SCORE
-        self.score = 0
-    
+        pygame.init()
 
         ## OBJECTS
-        self.wall = Rectangle(0, 0, P.win_w, P.win_h)
+        self._hit_brick = []
+        self.wall       = layout.get_wall()
+        self.bricks     = layout.get_bricks()
+        self.seeds      = layout.get_seeds()
+        self.stands     = layout.get_stands()
+        self.rewards    = []
 
-        self.bricks = []
-        # brick = Brick(600, 100, 100, 40)
-        # self.bricks.append(brick)
-        for x in range(10, P.win_w-100, 100+10):
-            for y in range(10, 150, 40+10):
-                brick = Rectangle(x, y, 100, 40)
-                self.bricks.append(brick)
-
-        # self.seeds = []
-        seed1 = MovableCircle(500, 500, 10, 1, -1)
-        seed2 = MovableCircle(200, 500, 10, -1, -1)
-        self.seeds = [seed1, seed2]
-        # self.seeds.append(see)
-
-        self.stands = []
-        stand = Stand(P.win_w/2, P.win_h-20-10, 150, 20)
-        self.stands.append(stand)
-    
-        self.rewards = []
-
+        self.score = 0
 
         ## INIT
-        pygame.init()
-        pygame.init()
-        self.window_surface = pygame.display.set_mode((self.wall.x2, self.wall.y2))
-        pygame.display.set_caption('Brick Breaker @@ by benting180"',)
-        self.head_font = pygame.font.SysFont(None, 30)
-        text_surface = self.head_font.render('Hello World!', True, (255,255,255))
-        self.window_surface.blit(text_surface, (10, 10))
+        self.window = pygame.display.set_mode((self.wall.x2, self.wall.y2))
+        pygame.display.set_caption(text.text_caption())
         pygame.display.update()
-        return
 
-    def score_brick(self):
-        self.score += 10
+    ### COLLISION
+    def check_reward_collision(self):
+        st = self.stands[0]
+        for j, r in enumerate(self.rewards):
+            if r.y2 > st.y1:
+                if r.x2 > st.x1 and st.x1 < st.x2:
+                    self.rewards.pop(j)
+                    st.enlong()
 
-    def draw(self):
-        self.window_surface.fill((0, 0, 0))
-
-        for b in self.bricks:
-            pygame.draw.rect(self.window_surface, P.GREEN, b.get_dim(), 1)
-
-        for b in self.seeds:
-            pygame.draw.circle(self.window_surface, P.PINK, b.get_coord(), b.r, 1)
-
-        for s in self.stands:
-            pygame.draw.rect(self.window_surface, P.BLUE, s.get_dim(), 1)
+    def check_seed_collision(self):
+        self.collide_wall()
+        self.collide_brick()
+        self.collide_stand()
         
-        for r in self.rewards:
-            pygame.draw.circle(self.window_surface, P.YELLOW, r.get_coord(), r.r, 1)
-
-        self.update_scoring()
-        
-    def update(self, dt):
-        for s in self.seeds:
-            s.nex(dt)
-
-        for r in self.rewards:
-            r.nex(dt)
-
-        return
-    
-
-
     def collide_wall(self):
         # w/ wall
         remove_i = []
@@ -102,11 +66,6 @@ class Controller():
             if b.y - b.r < self.wall.y1:
                 b.rebound_y()
                 b.y = self.wall.y1 + b.r
-        # copy_seeds = self.seeds.copy()
-        # for i in remove_i:
-        #     print(i)
-        #     copy_seeds.pop(i)
-        return
 
     def collide_brick(self):
         for s in self.seeds:
@@ -165,16 +124,11 @@ class Controller():
             
             if hit:
                 ## create rewards
-                self.create_reward(*(self.bricks[i].get_coord()))
+                xyi = self.bricks[i].get_coord() + (i,)
+                self._hit_brick.append(xyi)
                 self.bricks.pop(i)
                 self.score_brick()
-        return
     
-    def create_reward(self, x, y):
-        if random.random() > 0.1:
-            reward = MovableCircle(x, y, 7, 0, 1)
-            self.rewards.append(reward)
-
     def collide_stand(self):
         for st in self.stands:
             for s in self.seeds:
@@ -182,43 +136,63 @@ class Controller():
                     if s.x2 > st.x1 and s.x1 < st.x2:
                         s.y = st.y1 - s.r
                         s.rebound_y()
-        return
+
+    ### SCORE
+    def update_scoring(self):
+        _ = text.text_score(self.score)
+        self.window.blit(_, (10, 10))
+        pygame.display.update()
+    
+    def score_brick(self):
+        self.score += 10
+
+    ### WINDOW
+    def draw_all(self):
+        self.window.fill((0, 0, 0))
+
+        for b in self.bricks:
+            pygame.draw.rect(self.window, P.GREEN, b.get_dim(), 1)
+
+        for b in self.seeds:
+            pygame.draw.circle(self.window, P.PINK, b.get_coord(), b.r, 1)
+
+        for s in self.stands:
+            pygame.draw.rect(self.window, P.BLUE, s.get_dim(), 1)
+        
+        for r in self.rewards:
+            pygame.draw.circle(self.window, P.YELLOW, r.get_coord(), r.r, 1)
+
+        self.update_scoring()
+        
+    ### STATE CHANGE
+    def update(self, dt):
+        for s in self.seeds: s.nex(dt)
+        for r in self.rewards: r.nex(dt) 
+
+    def create_rewards(self):
+        for xy in self._hit_brick[::-1]:
+            i = xy[2]
+            if random.random() > 0.1:
+                reward = MovableCircle(xy[0], xy[1], 7, 0, 1)
+                self.rewards.append(reward)
+
+    def remove_bricks(self):
+        for xy in self._hit_brick[::-1]:
+            self.bricks.pop(xy[2])
 
     def check_endgame(self):
-        if len(self.seeds) == 0:
-            sys.exit()
-
-        if len(self.bricks) == 0:
-            sys.exit()
-                    
-    def check_seed_collision(self):
-        self.collide_wall()
-        self.collide_brick()
-        self.collide_stand()
-        return
+        if len(self.seeds) == 0 : sys.exit()
+        if len(self.bricks) == 0 : sys.exit()
     
-    def check_reward_collision(self):
-        #  for st in self.stands:
-        #     for s in self.seeds:
-        #         if s.y2 > st.y1:
-        #             if s.x2 > st.x1 and s.x1 < st.x2:
-        #                 s.rebound_y()
-        st = self.stands[0]
-        for j, r in enumerate(self.rewards):
-            if r.y2 > st.y1:
-                if r.x2 > st.x1 and st.x1 < st.x2:
-                    self.rewards.pop(j)
-                    st.enlong()
+    def reset_empty(self):
+        self._hit_brick = []
 
+    ### CONTROL
     def stand_left(self, dt):
-        for st in self.stands:
-            st.move_left(dt, 10)
-        return
+        for st in self.stands: st.move_left(dt, 10)
     
     def stand_right(self, dt):
-        for st in self.stands:
-            st.move_right(dt, P.win_w-10)
-        return
+        for st in self.stands: st.move_right(dt, P.win_w-10)
     
     def add_seed(self):
         st = self.stands[0]
@@ -226,10 +200,4 @@ class Controller():
         seed2 = MovableCircle(st.x2, st.y-10, 10, +0.5, -1)
         self.seeds.append(seed1)
         self.seeds.append(seed2)
-        return
     
-    def update_scoring(self):
-        text = "score:" + str(self.score)
-        text_surface = self.head_font.render(text, True, P.WHITE)
-        self.window_surface.blit(text_surface, (10, 10))
-        pygame.display.update()

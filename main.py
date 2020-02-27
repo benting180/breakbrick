@@ -40,7 +40,7 @@ while True:
                     if menu.get_selected() == 'exiting':
                         mode = 'Exit'
         pygame.event.pump() # process event queue
-        menu.update(ctr.window_surface)
+        menu.update(ctr.window)
 
     if mode == 'tutorial':
         for e in pygame.event.get():
@@ -48,12 +48,12 @@ while True:
                 if e.key == pygame.K_ESCAPE:
                     mode = 'menu'
 
-        ctr.window_surface.fill((0, 0, 0))
+        ctr.window.fill((0, 0, 0))
         head_font = pygame.font.SysFont(None, 80)
         text_surface1 = head_font.render("use <, >, SPACE to control", True, (255,255,255))
         text_surface2 = head_font.render("press ESC ...", True, (255,255,255))
-        ctr.window_surface.blit(text_surface1, (60,  60))
-        ctr.window_surface.blit(text_surface2, (60, 200))
+        ctr.window.blit(text_surface1, (60,  60))
+        ctr.window.blit(text_surface2, (60, 200))
         pygame.display.update()
         
 
@@ -70,13 +70,15 @@ while True:
                     ctr.add_seed()
                     
         t1 = time.time()
-        ctr.draw()
+        ctr.draw_all()
         pygame.display.update()
         dt = time.time() - t1
         ctr.update(dt)
         ctr.check_seed_collision()
         ctr.check_reward_collision()
+        ctr.create_rewards()
         ctr.check_endgame()
+        ctr.reset_empty()
 
         pygame.event.pump() # process event queue
     
