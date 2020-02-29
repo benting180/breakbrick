@@ -3,15 +3,6 @@ from shape import Circle, MovableCircle
 from shape import Stand
 
 
-def collide(input, x):
-    # seed - brick
-    # seed - wall
-    # seed - stand
-    # stand - reward
-    # seed - 
-    pass
-    # if type(input) == 
-
 def collide_up(a, b):
     # a hit b
     if a.y < b.y1 and a.y2 > b.y1:

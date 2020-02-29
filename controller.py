@@ -13,6 +13,9 @@ from shape import Stand
 
 import physics
 
+
+from menu import Menu
+
 import layout
 
 class Controller():
@@ -35,6 +38,11 @@ class Controller():
         self.window = pygame.display.set_mode((self.wall.x2, self.wall.y2))
         pygame.display.set_caption(text.text_caption())
         pygame.display.update()
+
+        
+        self.menu = Menu()
+        self.mode = 'menu'
+        self.dt = 0.1
 
     ### COLLISION
     def check_reward_collision(self):
@@ -72,7 +80,6 @@ class Controller():
             if side == 'up':
                 b.rebound_y()
                 b.y = self.wall.y1 + b.r
-
 
     def collide_brick(self):
         for s in self.seeds:
@@ -131,6 +138,8 @@ class Controller():
     def update_scoring(self):
         _ = text.text_score(self.score)
         self.window.blit(_, (10, 10))
+        _ = text.text_fps(self.dt)
+        self.window.blit(_, (10, 40))
         pygame.display.update()
     
     def add_score(self):
@@ -183,12 +192,70 @@ class Controller():
         self._hit_reward = []
 
     ### CONTROL
-    def stand_left(self, dt):
-        for st in self.stands: st.move_left(dt, 10)
+
+    def loop_menu(self):
+
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_UP:
+                    self.menu.select_up()
+                if e.key == pygame.K_DOWN:
+                    self.menu.select_down()
+                if e.key == pygame.K_SPACE:
+                    if self.menu.get_selected() == 'gaming':
+                        self.mode = 'gaming'
+                    if self.menu.get_selected() == 'tutorial':
+                        self.mode = 'tutorial'
+                    if self.menu.get_selected() == 'setting':
+                        pass
+                    if self.menu.get_selected() == 'ranking':
+                        pass
+                    if self.menu.get_selected() == 'exiting':
+                        self.mode = 'Exit'
+        pygame.event.pump() # process event queue
+        self.menu.update(self.window)
+
+    def loop_tutorial(self):
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    self.mode = 'menu'
+
+        self.window.fill((0, 0, 0))
+        head_font = pygame.font.SysFont(None, 80)
+        text_surface1 = head_font.render("use <, >, SPACE to control", True, (255,255,255))
+        text_surface2 = head_font.render("press ESC ...", True, (255,255,255))
+        self.window.blit(text_surface1, (60,  60))
+        self.window.blit(text_surface2, (60, 200))
+        pygame.display.update() 
     
-    def stand_right(self, dt):
-        for st in self.stands: st.move_right(dt, P.win_w-10)
-    
+    def loop_gaming(self):
+        keys = pygame.key.get_pressed()  #checking pressed keys
+        if keys[pygame.K_LEFT]:
+            for st in self.stands: st.move_left(self.dt, 10)
+        if keys[pygame.K_RIGHT]:
+            for st in self.stands: st.move_right(self.dt, P.win_w-10)
+        for e in pygame.event.get():
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:
+                    self.add_seed()
+                    
+        t1 = time.time()
+        self.draw_all()
+        pygame.display.update()
+        self.dt = time.time() - t1
+        self.update(self.dt)
+        self.check_seed_collision()
+        self.check_reward_collision()
+        self.create_rewards()
+        self.add_score()
+        self.remove_bricks()
+        self.remove_rewards()
+        self.check_endgame()
+        self.reset_empty()
+
+        pygame.event.pump() # process event queue      
+
     def add_seed(self):
         st = self.stands[0]
         seed1 = Seed(st.x1, st.y-10, 10, -0.5, -1)
