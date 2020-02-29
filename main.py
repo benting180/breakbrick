@@ -19,7 +19,7 @@ menu = Menu()
 mode = 'menu'
 
 while True:
-    print(mode)
+    # print(mode)
     if mode == 'menu':
         ## keyboard
         for e in pygame.event.get():

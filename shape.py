@@ -34,6 +34,12 @@ class MovableCircle(Circle):
     def rebound_y(self):
         self.vy = -self.vy
 
+class Seed(MovableCircle):
+    def __init__(self, x, y, r, vx, vy):
+        super().__init__(x, y, r, vx, vy)
+        self.speed = 300
+
+
 class Rectangle(object):
     def __init__(self, x, y, w, h):
         self.x = x
@@ -123,6 +129,8 @@ class Reward():
         self.x2 = self.x + self.r
         self.y1 = self.y - self.r
         self.y2 = self.y + self.r
+        self.w = self.r * 2
+        self.h = self.r * 2
         return
 
     def nex(self, dt):

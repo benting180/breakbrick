@@ -7,7 +7,7 @@ import pygame
 import parameters as P
 
 from shape import Rectangle, MovableRectangle
-from shape import Circle, MovableCircle
+from shape import Circle, MovableCircle, Seed
 from shape import Stand
 
 def get_wall(w=P.win_w, h=P.win_h):
@@ -23,8 +23,8 @@ def get_bricks():
     return bricks
 
 def get_seeds():
-    seed1 = MovableCircle(500, 500, 10, 1, -1)
-    seed2 = MovableCircle(200, 500, 10, -1, -1)
+    seed1 = Seed(500, 500, 10, 1, -1)
+    seed2 = Seed(200, 500, 10, -1, -1)
     return [seed1, seed2]
 
 def get_stands():

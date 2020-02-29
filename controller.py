@@ -8,8 +8,10 @@ import parameters as P
 import text
 
 from shape import Rectangle, MovableRectangle
-from shape import Circle, MovableCircle
+from shape import Circle, MovableCircle, Seed
 from shape import Stand
+
+import physics
 
 import layout
 
@@ -38,10 +40,10 @@ class Controller():
     def check_reward_collision(self):
         st = self.stands[0]
         for j, r in enumerate(self.rewards):
-            if r.y2 > st.y1:
-                if r.x2 > st.x1 and st.x1 < st.x2:
-                    self._hit_reward.append(j)
-                    st.enlong()
+            hit = physics.collide_up(r, st)
+            if hit:
+                self._hit_reward.append(j)
+                st.enlong()
 
     def check_seed_collision(self):
         self.collide_wall()
@@ -134,10 +136,10 @@ class Controller():
     def collide_stand(self):
         for st in self.stands:
             for s in self.seeds:
-                if s.y2 > st.y1:
-                    if s.x2 > st.x1 and s.x1 < st.x2:
-                        s.y = st.y1 - s.r
-                        s.rebound_y()
+                hit = physics.collide_up(s, st)
+                if hit:
+                    s.y = st.y1 - s.r
+                    s.rebound_y()
 
     ### SCORE
     def update_scoring(self):
@@ -204,8 +206,8 @@ class Controller():
     
     def add_seed(self):
         st = self.stands[0]
-        seed1 = MovableCircle(st.x1, st.y-10, 10, -0.5, -1)
-        seed2 = MovableCircle(st.x2, st.y-10, 10, +0.5, -1)
+        seed1 = Seed(st.x1, st.y-10, 10, -0.5, -1)
+        seed2 = Seed(st.x2, st.y-10, 10, +0.5, -1)
         self.seeds.append(seed1)
         self.seeds.append(seed2)
     
