@@ -54,20 +54,22 @@ class Controller():
         # w/ wall
         remove_i = []
         for i, b in enumerate(self.seeds):
-            # if hit the ground , just remove the ball
-            # if b.y + b.r > self.wall.y_max:
-            #     b.rebound_y()
-            if b.y > self.wall.y2:
+            side = physics.collide_boundary(b, self.wall)
+            
+            if side == 'down':
+                # if hit the ground , just remove the ball
+                # if b.y + b.r > self.wall.y_max:
+                #     b.rebound_y()
                 remove_i.append(i)
                 print("remove!")
                 self.seeds.pop(i)
-            if b.x + b.r > self.wall.x2:
+            if side == 'right':
                 b.x = self.wall.x2 - b.r
                 b.rebound_x()
-            if b.x - b.r < self.wall.x1:
+            if side == 'left':
                 b.x = self.wall.x1 + b.r
                 b.rebound_x()
-            if b.y - b.r < self.wall.y1:
+            if side == 'up':
                 b.rebound_y()
                 b.y = self.wall.y1 + b.r
 
@@ -85,49 +87,33 @@ class Controller():
             b = self.bricks[i]
 
             ## determine which side
-            up, down, left, right = False, False, False, False
+            side = physics.collide_which_side(s, b)
 
-            hit = False
-            if s.x > b.x2:
-                if s.y > b.y1 and s.y < b.y2:
-                    if s.x1 < b.x2:
-                        hit = True
-                        # print(s.x1, b.x2)
-                        print("RIGHT")
-                        
-                        s.x = b.x2+s.r
-                        s.auto_complete()
-                        s.rebound_x()
+            if side == 'right':
+                print("RIGHT")
+                s.x = b.x2+s.r
+                s.auto_complete()
+                s.rebound_x()
 
-            ## left
-            if s.x < b.x1:
-                if s.y > b.y1 and s.y < b.y2:
-                    if s.x2 > b.x1:
-                        hit = True
-                        s.x = b.x1-s.r
-                        s.auto_complete()
-                        print("LEFT")
-                        s.rebound_x()
-            ## down
-            if s.y > b.y2:
-                if s.x > b.x1 and s.x < b.x2:
-                    if s.y1 < b.y2:
-                        hit = True
-                        s.y = b.y2+s.r
-                        s.auto_complete()
-                        print("DOWN")
-                        s.rebound_y()
-            ## up
-            if s.y < b.y1:
-                if s.x > b.x1 and s.x < b.x2:
-                    if s.y2 > b.y1:
-                        hit = True
-                        s.y = b.y1-s.r
-                        s.auto_complete()
-                        print("UP")
-                        s.rebound_y()
+            if side == 'left':
+                s.x = b.x1-s.r
+                s.auto_complete()
+                print("LEFT")
+                s.rebound_x()
+
+            if side == 'down':
+                s.y = b.y2+s.r
+                s.auto_complete()
+                print("DOWN")
+                s.rebound_y()
+
+            if side == 'up':
+                s.y = b.y1-s.r
+                s.auto_complete()
+                print("UP")
+                s.rebound_y()
             
-            if hit:
+            if len(side) > 0:
                 xy = self.bricks[i].get_coord()
                 self._hit_brick_i.append(i)
                 self._hit_brick_xy.append(xy)
@@ -148,7 +134,6 @@ class Controller():
         pygame.display.update()
     
     def add_score(self):
-
         self.score += len(self._hit_brick_i) * 10
 
     ### WINDOW
