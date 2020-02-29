@@ -9,6 +9,7 @@ import text
 
 from shape import Rectangle, MovableRectangle
 from shape import Circle, MovableCircle, Seed
+from shape import Reward
 from shape import Stand
 
 import physics
@@ -159,7 +160,7 @@ class Controller():
             pygame.draw.rect(self.window, P.BLUE, s.get_dim(), 1)
         
         for r in self.rewards:
-            pygame.draw.circle(self.window, P.YELLOW, r.get_coord(), r.r, 1)
+            pygame.draw.circle(self.window, r.color, r.get_coord(), r.r, 1)
 
         self.update_scoring()
         
@@ -171,7 +172,7 @@ class Controller():
     def create_rewards(self):
         for xy in self._hit_brick_xy[::-1]:
             if random.random() > 0.1:
-                reward = MovableCircle(xy[0], xy[1], 7, 0, 1)
+                reward = Reward(xy[0], xy[1], 7, 0, 1)
                 self.rewards.append(reward)
 
     def remove_bricks(self):
@@ -258,8 +259,10 @@ class Controller():
 
     def add_seed(self):
         st = self.stands[0]
-        seed1 = Seed(st.x1, st.y-10, 10, -0.5, -1)
-        seed2 = Seed(st.x2, st.y-10, 10, +0.5, -1)
-        self.seeds.append(seed1)
+        # seed1 = Seed(st.x1, st.y-10, 10, -0.5, -1)
+        angle = random.random()*math.pi
+        seed2 = Seed(st.cx, st.y-10, 10, math.cos(angle), -math.sin(angle))
+        # seed3 = Seed(st.x2, st.y-10, 10, +0.5, -1)
+        # self.seeds.append(seed1)
         self.seeds.append(seed2)
-    
+        # self.seeds.append(seed3)

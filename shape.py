@@ -1,8 +1,13 @@
+import random
+import parameters as P
+
 class Circle(object):
     def __init__(self, x, y, r):
         self.x = x
         self.y = y
         self.r = r
+        self.w = r * 2
+        self.h = r * 2
         self.auto_complete()
     
     def auto_complete(self):
@@ -12,6 +17,7 @@ class Circle(object):
         self.x2 = self.x + self.r
         self.y1 = self.y - self.r
         self.y2 = self.y + self.r
+        
 
     def get_coord(self):
         return (int(self.x), int(self.y))
@@ -33,6 +39,7 @@ class MovableCircle(Circle):
 
     def rebound_y(self):
         self.vy = -self.vy
+    
 
 class Seed(MovableCircle):
     def __init__(self, x, y, r, vx, vy):
@@ -114,30 +121,30 @@ class Wall():
         self.y_max = y_max
         return
 
-class Reward():
+# class Reward():
+#     def __init__(self, x, y, r=7, vx=0, vy=1):
+#         self.x = x
+#         self.y = y
+#         self.r = r
+#         self.vx = vx
+#         self.vy = vy
+#         self.update()
+#         self.speed = 300
+
+#     def update(self):
+#         self.x1 = self.x - self.r
+#         self.x2 = self.x + self.r
+#         self.y1 = self.y - self.r
+#         self.y2 = self.y + self.r
+#         self.w = self.r * 2
+#         self.h = self.r * 2
+#         return
+
+class Reward(MovableCircle):
     def __init__(self, x, y, r=7, vx=0, vy=1):
-        self.x = x
-        self.y = y
-        self.r = r
-        self.vx = vx
-        self.vy = vy
-        self.update()
-        self.speed = 300
-
-    def update(self):
-        self.x1 = self.x - self.r
-        self.x2 = self.x + self.r
-        self.y1 = self.y - self.r
-        self.y2 = self.y + self.r
-        self.w = self.r * 2
-        self.h = self.r * 2
-        return
-
-    def nex(self, dt):
-        self.x = self.x + self.vx * dt * self.speed
-        self.y = self.y + self.vy * dt * self.speed
-        self.update()
-        return
-    
-    def get_coord(self):
-        return (int(self.x), int(self.y))
+        super().__init__(x=x, y=y, r=r, vx=vx, vy=vy)
+        self.type_buff = int(random.random() / 0.5)
+        if self.type_buff == 0:
+            self.color = P.YELLOW
+        else:
+            self.color = P.GREEN

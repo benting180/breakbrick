@@ -5,6 +5,7 @@ PINK = (255, 120, 255)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 102)
+ORANGE = (255, 153, 0)
 
 ## WINDOW
 win_w = 800
